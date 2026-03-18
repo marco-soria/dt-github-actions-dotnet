@@ -1,0 +1,14 @@
+name: Run every day
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  cron:
+    name: Run every day
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Hello world
+        run: echo "Hello, World!"
