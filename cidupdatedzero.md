@@ -1,0 +1,55 @@
+# Full ci/cd
+
+    name: CI
+
+    on:
+        push:
+            branches: ["main"]
+
+    permissions:
+        id-token: write
+        contents: read
+
+    jobs:
+        build:
+        name: CI
+        runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0
+
+      - name: dotnet test
+        run: dotnet test --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish src/GitHubActionsDotNet.Api/GitHubActionsDotNet.Api.csproj --configuration Release -o artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ms-artifact
+          path: artifacts/
+
+    deploy_dev:
+        name: Deploy Dev
+        needs: build
+        uses: ./.github/workflows/step-deploy.yml
+        with:
+            env: dev
+            resource_group_name: rg-ms-dev
+            app_service_name: ap-ms-github-actions-ms-dev
+        secrets: inherit
+
+    deploy_prod:
+        name: Deploy Prod
+        needs: deploy_dev
+        uses: ./.github/workflows/step-deploy.yml
+        with:
+            env: prod
+            resource_group_name: rg-ms-prod
+            app_service_name: ap-ms-github-actions-ms-prod
+        secrets: inherit
