@@ -1,19 +1,19 @@
 # Full ci/cd
 
-name: CI
+    name: CI
 
-on:
-push:
-branches: ["main"]
+    on:
+        push:
+            branches: ["main"]
 
-permissions:
-id-token: write
-contents: read
+    permissions:
+        id-token: write
+        contents: read
 
-jobs:
-build:
-name: CI
-runs-on: ubuntu-latest
+    jobs:
+        build:
+        name: CI
+        runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -49,9 +49,9 @@ runs-on: ubuntu-latest
             - name: Azure Login
               uses: azure/login@v2
               with:
-                client-id:
-                tenant-id:
-                subscription-id
+                client-id: ${{secrets.AZURE_CLIENT_ID}}
+                tenant-id: ${{secrets.AZURE_TENANT_ID}}
+                subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
             - name: "Deploy to Azure App Service"
               uses: azure/webapps-deploy@v2
@@ -75,9 +75,9 @@ runs-on: ubuntu-latest
             - name: Azure Login
               uses: azure/login@v2
               with:
-                client-id:
-                tenant-id:
-                subscription-id
+                client-id: ${{secrets.AZURE_CLIENT_ID}}
+                tenant-id: ${{secrets.AZURE_TENANT_ID}}
+                subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
             - name: "Deploy to Azure App Service"
               uses: azure/webapps-deploy@v2
