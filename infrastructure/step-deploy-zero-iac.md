@@ -1,0 +1,63 @@
+# step deploy zero iac (advanced github actions)
+
+    name "Step - Deploy"
+
+    on:
+        workflow_call:
+            inputs:
+                env:
+                    required: true
+                    type: string
+                resource_group_name:
+                    required: true
+                    type: string
+                app_service_name:
+                    required: true
+                    type: string
+            secrets:
+                AZURE_CLIENT_ID:
+                    required: true
+                AZURE_TENANT_ID:
+                    required: true
+                AZURE_SUBSCRIPTION_ID:
+                    required: true
+
+    jobs:
+        deploy:
+            name: Deploy ${{inputs.env}}
+            runs-on: ubuntu latest
+            environment: ${{inputs.env}}
+
+    steps:
+        - uses: actions/checkout@v4
+        - uses: actions/donwload-artifact@v4
+            with:
+            name: ms-artifact
+            path: artifacts/
+
+        - name: Azure Login
+            uses: azure/login@v2
+            with:
+                client-id: ${{secrets.AZURE_CLIENT_ID}}
+                tenant-id: ${{secrets.AZURE_TENANT_ID}}
+                subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+
+        - name: Run Bicep
+            run: |
+            az deployment group create \
+                --name ${{ inputs.env }}-deployment-${{ github.run_number }} \
+                --template-file infrastructure/main.bicep \
+                --parameters infrastructure/environments/${{inputs.env}}.bicepparam \
+                --resource-group ${{ inputs.resource_group_name }} \
+                --verbose
+
+        - name: "Deploy to Azure App Service"
+            uses: azure/webapps-deploy@v2
+            with:
+            app-name: ${{inputs.app_service_name}}$
+            slot-name: slot
+            package: artifacts/
+
+        - name: Swap slots
+          run:
+            az webapp deployment slot swap -g ${{ inputs.resource_group_name}} -n ${{inputs.app_service_name}} --slot slot --target-slot production --verbose
